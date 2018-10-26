@@ -7,6 +7,13 @@ def hello():
     return jsonify(hello='world')
 
 
+@app.route('/devel')
+def the_devel():
+    return """
+        <h1>Hey you're in the dev env</h1>
+    """
+
+
 @app.route('/<name>')
 def hello_name(name):
     return jsonify(hello=name)

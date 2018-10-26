@@ -1,6 +1,7 @@
 stages:
   - test
   - build
+  - deploy
 
 variables:
   IMAGE: $DOCKER_USER/flask-example
@@ -48,16 +49,43 @@ build homolog:
   environment:
     name: homolog
 
-# deploy:
-#   image: cdrx/rancher-gitlab-deploy
-#   stage: deploy
-#   script:
-#     - "upgrade
-#             --service <service>
-#             --environment $RANCHER_ENVIRONMENT
-#             --stack $RANCHER_STACK
-#             --rancher-key $RANCHER_ACCESS_KEY
-#             --rancher-secret $RANCHER_SECRET_KEY
-#             --rancher-url $RANCHER_URL"
-#   only:
-#     - /master/
+# DEPLOY STAGE
+
+.deploy:
+  image: cdrx/rancher-gitlab-deploy
+  stage: deploy
+  script:
+    - "upgrade
+            --service $SERVICE_NAME
+            --environment $RANCHER_ENVIRONMENT
+            --stack $RANCHER_STACK
+            --rancher-key $RANCHER_ACCESS_KEY
+            --rancher-secret $RANCHER_SECRET_KEY
+            --rancher-url $RANCHER_URL"
+
+deploy dev:
+  variables:
+    SERVICE_NAME: dev-flask
+  extends: .deploy
+  only:
+    - /devel/
+  environment:
+    name: dev
+
+deploy homolog:
+  variables:
+    SERVICE_NAME: hm-flask
+  extends: .deploy
+  only:
+    - /master/
+  environment:
+    name: homolog
+
+deploy prod:
+  variables:
+    SERVICE_NAME: flask
+  extends: .deploy
+  only:
+    - /stable/
+  environment:
+    name: prod
