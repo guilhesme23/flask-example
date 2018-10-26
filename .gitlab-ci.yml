@@ -1,0 +1,63 @@
+stages:
+  - test
+  - build
+
+variables:
+  IMAGE: $DOCKER_USER/lino:latest
+
+
+# TEST STAGE
+
+test_flake8:
+  image: ejplatform/python:alpine
+  stage: test
+  script:
+    - flake8
+
+
+# BUILD STAGE
+
+.build:
+  image: docker:latest
+  stage: build
+  services:
+    - docker:dind
+  script:
+    - docker build -t $IMAGE:$TAG .
+    - docker login -u $DOCKER_USER -p $DOCKER_PASS
+    - docker push $IMAGE
+
+build dev:
+  extends: .build
+  only:
+   - /devel/
+  environment:
+    name: dev
+
+build dev:
+  extends: .build
+  only:
+   - /stable/
+  environment:
+    name: prod
+
+build dev:
+  extends: .build
+  only:
+   - /master/
+  environment:
+    name: homolog
+
+# deploy:
+#   image: cdrx/rancher-gitlab-deploy
+#   stage: deploy
+#   script:
+#     - "upgrade
+#             --service <service>
+#             --environment $RANCHER_ENVIRONMENT
+#             --stack $RANCHER_STACK
+#             --rancher-key $RANCHER_ACCESS_KEY
+#             --rancher-secret $RANCHER_SECRET_KEY
+#             --rancher-url $RANCHER_URL"
+#   only:
+#     - /master/
